@@ -53,11 +53,11 @@ def LoadMultiDomainDataset(path_data, remove_bigrams=True):
             z = ' '.join([' '.join([x[0]] * int(x[1])) for x in z])
         return z
 
-    with open(os.path.join(path_data, 'negative.review'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(path_data, 'negative.review'), 'r', encoding='iso-8859-1') as f:
         for line in f:
             neg.append(get_words(line, remove_bigrams))
     
-    with open(os.path.join(path_data, 'positive.review'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(path_data, 'positive.review'), 'r', encoding='iso-8859-1') as f:
         for line in f:
             pos.append(get_words(line, remove_bigrams))
 
