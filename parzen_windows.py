@@ -4,7 +4,6 @@ import argparse
 import evaluate_explanations
 import sys
 import xgboost
-sys.path.append('..')
 from sklearn import ensemble
 from sklearn import neighbors
 import embedding_forest
