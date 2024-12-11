@@ -111,43 +111,43 @@ class ExplanationEvaluator:
                         break
         return train_results, test_results
 
-    def main():
-        parser = argparse.ArgumentParser(description='Evaluate some explanations')
-        parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
-        parser.add_argument('--algorithm', '-a', type=str, required=True, help='algorithm_name')
-        parser.add_argument('--explainer', '-e', type=str, required=True, help='explainer name')
-        args = parser.parse_args()
-        dataset = args.dataset
-        algorithm = args.algorithm
-        evaluator = ExplanationEvaluator(classifier_names=[algorithm])
-        evaluator.load_datasets([dataset])
-        evaluator.vectorize_and_train()
-        explain_fn = None
-        if args.explainer == 'lime':
-            rho = 25
-            kernel = lambda d: np.sqrt(np.exp(-(d**2) / rho ** 2))
-            explainer = explainers.GeneralizedLocalExplainer(kernel, explainers.data_labels_distances_mapping_text, num_samples=15000, return_mean=False, verbose=False, return_mapped=True)
-            explain_fn = explainer.explain_instance
-        elif args.explainer == 'parzen':
-            sigmas = {
-                'multi_polarity_electronics': {'tree': 0.5, 'l1logreg': 1},
-                'multi_polarity_kitchen': {'tree': 0.75, 'l1logreg': 2.0},
-                'multi_polarity_dvd': {'tree': 8.0, 'l1logreg': 1},
-                'multi_polarity_books': {'tree': 2.0, 'l1logreg': 2.0}
-            }
-            explainer = parzen_windows.ParzenWindowClassifier()
-            cv_preds = sklearn.model_selection.cross_val_predict(evaluator.classifiers[dataset][algorithm], evaluator.train_vectors[dataset], evaluator.train_labels[dataset])  # Updated from cross_validation to model_selection
-            explainer.fit(evaluator.train_vectors[dataset], cv_preds)
-            explainer.sigma = sigmas[dataset][algorithm]
-            explain_fn = explainer.explain_instance
-        elif args.explainer == 'greedy':
-            explain_fn = explainers.explain_greedy
-        elif args.explainer == 'random':
-            explainer = explainers.RandomExplainer()
-            explain_fn = explainer.explain_instance
-        train_results, test_results = evaluator.measure_explanation_hability(explain_fn)
-        print(f'Average test: {np.mean(test_results[dataset][algorithm])}')  # Changed to f-string
-        out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
+def main():
+    parser = argparse.ArgumentParser(description='Evaluate some explanations')
+    parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
+    parser.add_argument('--algorithm', '-a', type=str, required=True, help='algorithm_name')
+    parser.add_argument('--explainer', '-e', type=str, required=True, help='explainer name')
+    args = parser.parse_args()
+    dataset = args.dataset
+    algorithm = args.algorithm
+    evaluator = ExplanationEvaluator(classifier_names=[algorithm])
+    evaluator.load_datasets([dataset])
+    evaluator.vectorize_and_train()
+    explain_fn = None
+    if args.explainer == 'lime':
+        rho = 25
+        kernel = lambda d: np.sqrt(np.exp(-(d**2) / rho ** 2))
+        explainer = explainers.GeneralizedLocalExplainer(kernel, explainers.data_labels_distances_mapping_text, num_samples=15000, return_mean=False, verbose=False, return_mapped=True)
+        explain_fn = explainer.explain_instance
+    elif args.explainer == 'parzen':
+        sigmas = {
+            'multi_polarity_electronics': {'tree': 0.5, 'l1logreg': 1},
+            'multi_polarity_kitchen': {'tree': 0.75, 'l1logreg': 2.0},
+            'multi_polarity_dvd': {'tree': 8.0, 'l1logreg': 1},
+            'multi_polarity_books': {'tree': 2.0, 'l1logreg': 2.0}
+        }
+        explainer = parzen_windows.ParzenWindowClassifier()
+        cv_preds = sklearn.model_selection.cross_val_predict(evaluator.classifiers[dataset][algorithm], evaluator.train_vectors[dataset], evaluator.train_labels[dataset])  # Updated from cross_validation to model_selection
+        explainer.fit(evaluator.train_vectors[dataset], cv_preds)
+        explainer.sigma = sigmas[dataset][algorithm]
+        explain_fn = explainer.explain_instance
+    elif args.explainer == 'greedy':
+        explain_fn = explainers.explain_greedy
+    elif args.explainer == 'random':
+        explainer = explainers.RandomExplainer()
+        explain_fn = explainer.explain_instance
+    train_results, test_results = evaluator.measure_explanation_hability(explain_fn)
+    print(f'Average test: {np.mean(test_results[dataset][algorithm])}')  # Changed to f-string
+    out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
 
 if __name__ == "__main__":
     main()
