@@ -58,10 +58,10 @@ class ExplanationEvaluator:
         self.test_labels = {}
         for dataset in dataset_names:
             train_data, train_labels, test_data, test_labels, _ = LoadDataset(dataset)
-            self.train_data[dataset] = train_data.tolist() if hasattr(train_data, 'tolist') else train_data
-            self.train_labels[dataset] = train_labels.tolist() if hasattr(train_labels, 'tolist') else train_labels
-            self.test_data[dataset] = test_data.tolist() if hasattr(test_data, 'tolist') else test_data
-            self.test_labels[dataset] = test_labels.tolist() if hasattr(test_labels, 'tolist') else test_labels
+            self.train_data[dataset] = train_data
+            self.train_labels[dataset] = train_labels
+            self.test_data[dataset] = test_data
+            self.test_labels[dataset] = test_labels
             
     def vectorize_and_train(self):
         self.vectorizer = None
