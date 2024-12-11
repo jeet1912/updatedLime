@@ -112,11 +112,20 @@ def explain_greedy_martens(instance_vector,
   return [(x, 1) for x in explanation]
 
 def data_labels_distances_mapping_text(x, classifier_fn, num_samples):
-    distance_fn = lambda x : sklearn.metrics.pairwise.cosine_distances(x[0],x)[0] * 100
+    logger.info('data_labels_distances_mapping_text called')
+    if not sp.sparse.issparse(x):
+        raise ValueError("Expected 'x' to be sparse.")
+    distance_fn = lambda x: sklearn.metrics.pairwise.cosine_distances(x[0], x)[0] * 100
     features = x.nonzero()[1]
     vals = np.array(x[x.nonzero()])[0]
     doc_size = len(sp.sparse.find(x)[2])                                    
-    sample = np.random.randint(1, doc_size, num_samples - 1)                             
+    if doc_size <= 1:
+        logger.warning(f"Document size too small ({doc_size}), adjusting sampling logic.")
+        # Here you choose what to do if doc_size is too small. 
+        # For example, you might return all features or just the existing one:
+        sample = np.array([1]) if doc_size == 1 else np.array([])
+    else:
+        sample = np.random.randint(1, doc_size, num_samples - 1)                             
     data = np.zeros((num_samples, len(features)))    
     inverse_data = np.zeros((num_samples, len(features)))                                         
     data[0] = np.ones(doc_size)
@@ -131,10 +140,13 @@ def data_labels_distances_mapping_text(x, classifier_fn, num_samples):
     sparse_inverse[:, features] = inverse_data
     sparse_inverse = sp.sparse.csr_matrix(sparse_inverse)
     mapping = features
-    labels = classifier_fn(sparse_inverse)
+    try:
+        labels = classifier_fn(sparse_inverse)
+    except Exception as e:
+        logger.error(f"Classifier function failed with error: {e}")
+        raise
     distances = distance_fn(sparse_inverse)
     return data, labels, distances, mapping
-
 # This is LIME
 class GeneralizedLocalExplainer:
   def __init__(self,
