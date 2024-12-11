@@ -43,8 +43,9 @@ class ExplanationEvaluator:
                 for c in try_cs:
                     self.classifiers[dataset]['l2logreg'] = linear_model.LogisticRegression(penalty='l2', fit_intercept=True, C=c)
                     self.classifiers[dataset]['l2logreg'].fit(self.train_vectors[dataset], self.train_labels[dataset])
-                    lengths = [len(x.nonzero()[0]) for x in self.classifiers[dataset]['l2logreg'].transform(self.train_vectors[dataset])]
-                    if np.max(lengths) <= 10:
+                    coefs = self.classifiers[dataset]['l2logreg'].coef_[0]
+                    lengths = [len(np.where(abs(coefs) > 1e-6)[0])]  # Count non-negligible coefficients
+                    if max(lengths) <= 10:
                         break
             if classifier == 'tree':
                 self.classifiers[dataset]['tree'] = tree.DecisionTreeClassifier(random_state=1)
