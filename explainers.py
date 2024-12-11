@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from sklearn import linear_model
 import sklearn.metrics.pairwise
-import logger
+import logging
 
 logger = logging.getLogger(__name__)
 ###############################
