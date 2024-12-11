@@ -195,7 +195,9 @@ class GeneralizedLocalExplainer:
 
     def explain_instance(self, raw_data, label, classifier_fn, num_features, dataset=None):
         if not callable(classifier_fn):  # Changed condition for Python 3
+            print('Does it get here?')
             classifier_fn = classifier_fn.predict_proba
+            print(classifier_fn)
         data, labels, distances, mapping = self.data_labels_distances_mapping(raw_data, classifier_fn)
         if self.return_mapped:
             if self.return_mean:
