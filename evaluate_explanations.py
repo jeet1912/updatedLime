@@ -1,6 +1,5 @@
 import sys
 import copy
-sys.path.append('..')
 import argparse
 import explainers
 import parzen_windows
