@@ -164,7 +164,7 @@ class GeneralizedLocalExplainer:
         pass
         
     def data_labels_distances_mapping(self, raw_data, classifier_fn):
-                if not sp.sparse.issparse(raw_data):
+        if not sp.sparse.issparse(raw_data):
             raise ValueError("Expected raw_data to be sparse.")
         try:
             return self.data_labels_distances_mapping_fn(raw_data, classifier_fn, self.num_samples)
