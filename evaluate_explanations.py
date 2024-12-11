@@ -75,7 +75,9 @@ class ExplanationEvaluator:
             self.train_vectors[d] = self.vectorizer[d].fit_transform(self.train_data[d])
             self.test_vectors[d] = self.vectorizer[d].transform(self.test_data[d])
             terms = np.array(list(self.vectorizer[d].vocabulary_.keys()))
+            print('Terms ',len(terms))
             indices = np.array(list(self.vectorizer[d].vocabulary_.values()))
+            print('indices ',len(indices))
             self.inverse_vocabulary[d] = terms[np.argsort(indices)]
         print('Done')
         print('Training...')
@@ -153,7 +155,7 @@ def main():
         explainer = explainers.RandomExplainer()
         explain_fn = explainer.explain_instance
     train_results, test_results = evaluator.measure_explanation_ability(explain_fn)
-    average_test = np.nanmean(test_results[dataset][algorithm])
+    average_test = np.mean(test_results[dataset][algorithm])
     print(f'Average test: {average_test}')  # Changed to f-string
     out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
 
