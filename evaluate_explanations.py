@@ -32,18 +32,18 @@ class ExplanationEvaluator:
     def __init__(self, classifier_names=None):
         self.classifier_names = classifier_names
         if not self.classifier_names:
-            self.classifier_names = ['l1logreg', 'tree']
+            self.classifier_names = ['l2logreg', 'tree']
         self.classifiers = {}
 
     def init_classifiers(self, dataset):
         self.classifiers[dataset] = {}
         for classifier in self.classifier_names:
-            if classifier == 'l1logreg':
+            if classifier == 'l2logreg':
                 try_cs = np.arange(0.1, 0, -0.01)  # Changed for Python 3.x float division
                 for c in try_cs:
-                    self.classifiers[dataset]['l1logreg'] = linear_model.LogisticRegression(penalty='l1', fit_intercept=True, C=c)
-                    self.classifiers[dataset]['l1logreg'].fit(self.train_vectors[dataset], self.train_labels[dataset])
-                    lengths = [len(x.nonzero()[0]) for x in self.classifiers[dataset]['l1logreg'].transform(self.train_vectors[dataset])]
+                    self.classifiers[dataset]['l2logreg'] = linear_model.LogisticRegression(penalty='l2', fit_intercept=True, C=c)
+                    self.classifiers[dataset]['l2logreg'].fit(self.train_vectors[dataset], self.train_labels[dataset])
+                    lengths = [len(x.nonzero()[0]) for x in self.classifiers[dataset]['l2logreg'].transform(self.train_vectors[dataset])]
                     if np.max(lengths) <= 10:
                         break
             if classifier == 'tree':
@@ -94,11 +94,11 @@ class ExplanationEvaluator:
             for c in self.classifiers[d]:
                 train_results[d][c] = []
                 test_results[d][c] = []
-                if c == 'l1logreg':
+                if c == 'l2logreg':
                     c_features = self.classifiers[d][c].coef_.nonzero()[1]
                 print(f'classifier: {c}')  # Changed to f-string
                 for i in range(len(self.test_data[d])):
-                    if c == 'l1logreg':
+                    if c == 'l2logreg':
                         true_features = set([x for x in self.test_vectors[d][i].nonzero()[1] if x in c_features])
                     elif c == 'tree':
                         true_features = get_tree_explanation(self.classifiers[d][c], self.test_vectors[d][i])
