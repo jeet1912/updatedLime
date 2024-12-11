@@ -94,8 +94,8 @@ class ExplanationEvaluator:
         train_results = {}
         test_results = {}
         for d in self.train_data:
-            train_results[d] = []
-            test_results[d] = []
+            train_results[d] = {}
+            test_results[d] = {}
             print(f'Dataset: {d}')  # Changed to f-string
             for c in self.classifiers[d]:  
                 train_results[d][c] = []
@@ -155,8 +155,11 @@ def main():
         explainer = explainers.RandomExplainer()
         explain_fn = explainer.explain_instance
     train_results, test_results = evaluator.measure_explanation_ability(explain_fn)
-    average_test = np.mean(test_results[dataset][algorithm])
-    print(f'Average test: {average_test}')  # Changed to f-string
+    if test_results[dataset][algorithm]:  # Check if we have any results
+        average_test = np.mean(test_results[dataset][algorithm])
+        print(f'Average test: {average_test}')
+    else:
+        print(f"No test results for {dataset} with {algorithm}")g
     out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
 
 if __name__ == "__main__":
