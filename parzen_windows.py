@@ -63,37 +63,20 @@ class ParzenWindowClassifier:
         self.sigma = best_sigma
 
     def explain_instance(self, x, _, __, num_features, ___=None):
-     
-        print(f"Shape of self.X: {self.X.shape}")
-        print(f"Shape of x before reshape: {x.shape}")
-        
-        # Ensure x is in the correct shape for broadcasting
-        x = x.reshape(1, -1) if x.ndim == 1 else x  # If x is 1D, make it 2D with one row
-        
-        print(f"Shape of x after reshape: {x.shape}")
-        print(f"Type of self.X: {type(self.X)}")
-        print(f"Dtype of self.X: {self.X.dtype}")
-        print(f"Type of x: {type(x)}")
-        print(f"Dtype of x: {x.dtype}")
-        
-        # Handle sparse matrix if self.X is sparse
-        if sp.sparse.issparse(self.X):
-            minus = self.X - sp.sparse.csr_matrix(x)
-        else:
-            minus = self.X - x[0, :]  # Explicit broadcasting
-        
+        minus = self.X - x
         b = sp.sparse.csr_matrix(minus)
         ker = self.kernel(b, self.sigma)
-        times = np.multiply(minus, ker[:, np.newaxis])
-        sumk_0 = sum(ker[self.zeros])
-        sumk_1 = sum(ker[self.ones])
+        #ker = np.array([self.kernel(z, self.sigma) for z in b])
+        times = np.multiply(minus, ker[:,np.newaxis])
+        sumk_0= sum(ker[self.zeros])
+        sumk_1= sum(ker[self.ones])
         sumt_0 = sum(times[self.zeros])
         sumt_1 = sum(times[self.ones])
         sumk_total = sumk_0 + sumk_1
-        exp = (sumk_0 * sumt_1 - sumk_1 * sumt_0) / (self.sigma ** 2 * sumk_total ** 2)
+        exp = (sumk_0 * sumt_1 - sumk_1 * sumt_0) / (self.sigma **2 * sumk_total ** 2)
         features = x.nonzero()[1]
         values = np.array(exp[0, x.nonzero()[1]])[0]
-        return sorted(zip(features, values), key=lambda x: np.abs(x[1]), reverse=True)[:num_features]
+        return sorted(zip(features, values), key=lambda x:np.abs(x[1]), revers
             
 def main():
     parser = argparse.ArgumentParser(description='Visualize some stuff')
