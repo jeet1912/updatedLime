@@ -3,8 +3,11 @@ import numpy as np
 import scipy as sp
 from sklearn import linear_model
 import sklearn.metrics.pairwise
+import logging
 
-
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class RandomExplainer:
     def __init__(self):
@@ -14,17 +17,25 @@ class RandomExplainer:
         pass
 
     def explain_instance(self, instance_vector, label, classifier, num_features, dataset):
+        if not sp.sparse.issparse(instance_vector):
+            raise ValueError("Expected instance_vector to be sparse.")
         nonzero = instance_vector.nonzero()[1]
+        if len(nonzero) < num_features:
+            num_features = len(nonzero)  # Adjust if we have fewer features than requested
         explanation = np.random.choice(nonzero, num_features)
         return [(x, 1) for x in explanation]
 
     def explain(self, train_vectors, train_labels, classifier, num_features, dataset):
+        if train_vectors.shape[0] == 0:
+            raise ValueError("No training vectors available.")
         i = np.random.randint(0, train_vectors.shape[0])
         explanation = self.explain_instance(train_vectors[i], None, None, num_features, dataset)
         return i, explanation
 
 def most_important_word(classifier, v, class_):
-    # Returns the word w that moves P(Y) - P(Y|NOT w) the most for class Y.
+    # Ensure v is sparse and has at least one feature
+    if not sp.sparse.issparse(v) or v.nnz == 0:
+        raise ValueError("Input vector 'v' must be sparse and non-empty.")
     max_index = 0
     max_change = -1
     orig = classifier.predict_proba(v)[0][class_]
@@ -42,6 +53,8 @@ def most_important_word(classifier, v, class_):
     return max_index
 
 def explain_greedy(instance_vector, label, classifier, num_features, dataset=None):
+    if not sp.sparse.issparse(instance_vector):
+        raise ValueError("Expected instance_vector to be sparse.")
     explanation = []
     z = instance_vector.copy()
     while len(explanation) < num_features:
@@ -53,7 +66,8 @@ def explain_greedy(instance_vector, label, classifier, num_features, dataset=Non
     return [(x, 1) for x in explanation]
 
 def most_important_word_martens(predict_fn, v, class_):
-    # Returns the word w that moves P(Y) - P(Y|NOT w) the most for class Y.
+    if not sp.sparse.issparse(v) or v.nnz == 0:
+        raise ValueError("Input vector 'v' must be sparse and non-empty.")
     max_index = 0
     max_change = -1
     orig = predict_fn(v)[0, class_]
@@ -72,7 +86,9 @@ def most_important_word_martens(predict_fn, v, class_):
 
 def explain_greedy_martens(instance_vector, label, predict_fn, num_features, dataset=None):
     if not callable(predict_fn):
-        predict_fn = predict_fn.predict_proba
+        raise TypeError("predict_fn must be callable")
+    if not sp.sparse.issparse(instance_vector):
+        raise ValueError("Expected instance_vector to be sparse.")
     explanation = []
     z = instance_vector.copy()
     cur_score = predict_fn(instance_vector)[0, label]
@@ -88,11 +104,15 @@ def explain_greedy_martens(instance_vector, label, predict_fn, num_features, dat
     return [(x, 1) for x in explanation]
 
 def data_labels_distances_mapping_text(x, classifier_fn, num_samples):
-    print('Is datamappingtext called?')
+    logger.info('data_labels_distances_mapping_text called')
+    if not sp.sparse.issparse(x):
+        raise ValueError("Expected 'x' to be sparse.")
     distance_fn = lambda x: sklearn.metrics.pairwise.cosine_distances(x[0], x)[0] * 100
     features = x.nonzero()[1]
     vals = np.array(x[x.nonzero()])[0]
     doc_size = len(sp.sparse.find(x)[2])                                    
+    if doc_size == 0:
+        raise ValueError("Document size should not be zero for perturbations.")
     sample = np.random.randint(1, doc_size, num_samples - 1)                             
     data = np.zeros((num_samples, len(features)))    
     inverse_data = np.zeros((num_samples, len(features)))                                         
@@ -108,7 +128,11 @@ def data_labels_distances_mapping_text(x, classifier_fn, num_samples):
     sparse_inverse[:, features] = inverse_data
     sparse_inverse = sp.sparse.csr_matrix(sparse_inverse)
     mapping = features
-    labels = classifier_fn(sparse_inverse)
+    try:
+        labels = classifier_fn(sparse_inverse)
+    except Exception as e:
+        logger.error(f"Classifier function failed with error: {e}")
+        raise
     distances = distance_fn(sparse_inverse)
     return data, labels, distances, mapping
 
@@ -124,12 +148,6 @@ class GeneralizedLocalExplainer:
                  lambda_=None,
                  verbose=True,
                  positive=False):
-        # Transform_classifier, transform_explainer,
-        # transform_explainer_to_classifier all take raw data in, whatever that is.
-        # perturb(x, num_samples) returns data (perturbed data in f'(x) form),
-        # inverse_data (perturbed data in x form) and mapping, where mapping is such
-        # that mapping[i] = j, where j is an index for x form.
-        # distance_fn takes raw data in. what we're calling raw data is just x
         self.lambda_ = lambda_
         self.kernel_fn = kernel_fn
         self.data_labels_distances_mapping_fn = data_labels_distances_mapping_fn
@@ -140,14 +158,19 @@ class GeneralizedLocalExplainer:
         self.return_mean = return_mean
         self.verbose = verbose
         self.positive = positive
-        print('LIME INNIT')
-                     
+        logger.info('LIME Initialized')
+
     def reset(self):
         pass
-
+        
     def data_labels_distances_mapping(self, raw_data, classifier_fn):
-        data, labels, distances, mapping = self.data_labels_distances_mapping_fn(raw_data, classifier_fn, self.num_samples)
-        return data, labels, distances, mapping
+                if not sp.sparse.issparse(raw_data):
+            raise ValueError("Expected raw_data to be sparse.")
+        try:
+            return self.data_labels_distances_mapping_fn(raw_data, classifier_fn, self.num_samples)
+        except Exception as e:
+            logger.error(f"Error in data_labels_distances_mapping: {e}")
+            raise
 
     def generate_lars_path(self, weighted_data, weighted_labels):
         X = weighted_data
@@ -155,6 +178,8 @@ class GeneralizedLocalExplainer:
         return alphas, coefs
 
     def explain_instance_with_data(self, data, labels, distances, label, num_features):
+        if data.shape[0] == 0:
+            raise ValueError("No data points to explain.")
         weights = self.kernel_fn(distances)
         weighted_data = data * weights[:, np.newaxis]
         if self.mean is None:
@@ -163,9 +188,9 @@ class GeneralizedLocalExplainer:
             mean = self.mean
         shifted_labels = labels[:, label] - mean
         if self.verbose:
-            print(f'mean {mean}')  # Changed print statement for Python 3
+            logger.info(f'mean {mean}')
         weighted_labels = shifted_labels * weights
-        used_features = list(range(weighted_data.shape[1]))  # Changed to list for Python 3
+        used_features = list(range(weighted_data.shape[1]))
         nonzero = used_features
         alpha = 1
         if self.lambda_:
@@ -189,29 +214,35 @@ class GeneralizedLocalExplainer:
         debiased_model = linear_model.Ridge(alpha=0, fit_intercept=False)
         debiased_model.fit(weighted_data[:, used_features], weighted_labels)
         if self.verbose:
-            print(f'Prediction_local {debiased_model.predict(data[0, used_features].reshape(1, -1)) + mean}, Right: {labels[0, label]}')  # Changed print statement for Python 3
+            logger.info(f'Prediction_local {debiased_model.predict(data[0, used_features].reshape(1, -1)) + mean}, Right: {labels[0, label]}')
         if self.return_mean:
             return sorted(zip(used_features, debiased_model.coef_), key=lambda x: abs(x[1]), reverse=True), mean
         else:
             return sorted(zip(used_features, debiased_model.coef_), key=lambda x: abs(x[1]), reverse=True)
 
     def explain_instance(self, raw_data, label, classifier_fn, num_features, dataset=None):
-        if not callable(classifier_fn):  # Changed condition for Python 3
-            print('Does it get under non callable function in explainers.py?')
-            classifier_fn = classifier_fn.predict_proba
-            print(classifier_fn)
-        data, labels, distances, mapping = self.data_labels_distances_mapping(raw_data, classifier_fn)
-        if self.return_mapped:
-            if self.return_mean:
-                exp, mean = self.explain_instance_with_data(data, labels, distances, label, num_features)
+        if not sp.sparse.issparse(raw_data):
+            raise ValueError("Expected raw_data to be sparse.")
+        if not callable(classifier_fn):
+            logger.info("classifier_fn is not callable, using predict_proba")
+            if hasattr(classifier_fn, 'predict_proba'):
+                classifier_fn = classifier_fn.predict_proba
             else:
-                exp = self.explain_instance_with_data(data, labels, distances, label, num_features)
-            exp = [(mapping[x[0]], x[1]) for x in exp]
-            if self.return_mean:
-                return exp, mean
-            else:
-                return exp
-        result = self.explain_instance_with_data(data, labels, distances, label, num_features)
-        return result, mapping
-
-
+                raise TypeError("classifier_fn neither callable nor has predict_proba method")
+        try:
+            data, labels, distances, mapping = self.data_labels_distances_mapping(raw_data, classifier_fn)
+            if self.return_mapped:
+                if self.return_mean:
+                    exp, mean = self.explain_instance_with_data(data, labels, distances, label, num_features)
+                else:
+                    exp = self.explain_instance_with_data(data, labels, distances, label, num_features)
+                exp = [(mapping[x[0]], x[1]) for x in exp]
+                if self.return_mean:
+                    return exp, mean
+                else:
+                    return exp
+            result = self.explain_instance_with_data(data, labels, distances, label, num_features)
+            return result, mapping
+        except Exception as e:
+            logger.error(f"Error during explanation: {e}")
+            raise
