@@ -154,7 +154,8 @@ def main():
         explainer = explainers.RandomExplainer()
         explain_fn = explainer.explain_instance
     train_results, test_results = evaluator.measure_explanation_hability(explain_fn)
-    print(f'Average test: {np.mean(test_results[dataset][algorithm])}')  # Changed to f-string
+    average_test = np.nanmean(test_results[dataset][algorithm])
+    print(f'Average test: {average_test}')  # Changed to f-string
     out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
 
 if __name__ == "__main__":
