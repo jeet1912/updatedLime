@@ -65,8 +65,9 @@ class ExplanationEvaluator:
         self.test_vectors = {}
         self.inverse_vocabulary = {}
         print('Vectorizing...', end='')  # Changed print for Python 3
+        print(len(self.train_data))
         for d in self.train_data:
-            print(d)
+            print('What is d? ',d)
             self.vectorizer[d] = CountVectorizer(lowercase=False, binary=True)
             self.train_vectors[d] = self.vectorizer[d].fit_transform(self.train_data[d])
             self.test_vectors[d] = self.vectorizer[d].transform(self.test_data[d])
