@@ -63,13 +63,16 @@ class ParzenWindowClassifier:
         self.sigma = best_sigma
 
     def explain_instance(self, x, _, __, num_features, ___=None):
+        print(f"Shape of self.X: {self.X.shape}")
+        print(f"Shape of x before reshape: {x.shape}")
+        
         # Ensure x is in the correct shape for broadcasting
         x = x.reshape(1, -1) if x.ndim == 1 else x  # If x is 1D, make it 2D with one row
         
+        print(f"Shape of x after reshape: {x.shape}")
+        
         # Now, ensure we can subtract x from each row of self.X
         minus = self.X - x
-        print(f"Shape of self.X: {self.X.shape}")
-        print(f"Shape of x: {x.shape}")
         b = sp.sparse.csr_matrix(minus)
         ker = self.kernel(b, self.sigma)
         times = np.multiply(minus, ker[:, np.newaxis])
@@ -82,7 +85,7 @@ class ParzenWindowClassifier:
         features = x.nonzero()[1]
         values = np.array(exp[0, x.nonzero()[1]])[0]
         return sorted(zip(features, values), key=lambda x: np.abs(x[1]), reverse=True)[:num_features]
-
+        
 def main():
     parser = argparse.ArgumentParser(description='Visualize some stuff')
     parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
