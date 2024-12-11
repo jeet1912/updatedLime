@@ -1,6 +1,5 @@
 import sys
 import copy
-sys.path.append('..')
 import time
 import numpy as np
 import scipy as sp
