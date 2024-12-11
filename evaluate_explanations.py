@@ -57,8 +57,12 @@ class ExplanationEvaluator:
         self.test_data = {}
         self.test_labels = {}
         for dataset in dataset_names:
-            self.train_data[dataset], self.train_labels[dataset], self.test_data[dataset], self.test_labels[dataset], _ = LoadDataset(dataset)
-
+            train_data, train_labels, test_data, test_labels, _ = LoadDataset(dataset)
+            self.train_data[dataset] = train_data.tolist() if hasattr(train_data, 'tolist') else train_data
+            self.train_labels[dataset] = train_labels.tolist() if hasattr(train_labels, 'tolist') else train_labels
+            self.test_data[dataset] = test_data.tolist() if hasattr(test_data, 'tolist') else test_data
+            self.test_labels[dataset] = test_labels.tolist() if hasattr(test_labels, 'tolist') else test_labels
+            
     def vectorize_and_train(self):
         self.vectorizer = {}
         self.train_vectors = {}
@@ -67,7 +71,7 @@ class ExplanationEvaluator:
         print('Vectorizing...', end='')  # Changed print for Python 3
         print(len(self.train_data))
         for d in self.train_data:
-            print('What is d? ',d)
+            print('What is d? ', d)
             self.vectorizer[d] = CountVectorizer(lowercase=False, binary=True)
             self.train_vectors[d] = self.vectorizer[d].fit_transform(self.train_data[d])
             self.test_vectors[d] = self.vectorizer[d].transform(self.test_data[d])
@@ -106,12 +110,15 @@ class ExplanationEvaluator:
                     if len(true_features) == 0:
                         continue
                     to_get = budget
+                    
+                    # Ensure explain_fn can handle numpy arrays if self.test_vectors[d][i] or self.test_labels[d][i] are numpy arrays
                     exp_features = set(map(lambda x: x[0], explain_fn(self.test_vectors[d][i], self.test_labels[d][i], self.classifiers[d][c], to_get, d)))
+                    
                     test_results[d][c].append(float(len(true_features.intersection(exp_features))) / len(true_features))
                     if max_examples and i >= max_examples:
                         break
         return train_results, test_results
-
+        
 def main():
     parser = argparse.ArgumentParser(description='Evaluate some explanations')
     parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
