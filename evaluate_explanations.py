@@ -159,7 +159,7 @@ def main():
         average_test = np.mean(test_results[dataset][algorithm])
         print(f'Average test: {average_test}')
     else:
-        print(f"No test results for {dataset} with {algorithm}")g
+        print(f"No test results for {dataset} with {algorithm}")
     out = {'train': train_results[dataset][algorithm], 'test': test_results[dataset][algorithm]}
 
 if __name__ == "__main__":
