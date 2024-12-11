@@ -62,7 +62,7 @@ class ParzenWindowClassifier:
         print(f'Best sigma achieves {best_mistakes} mistakes. Disagreement={float(best_mistakes) / cv_X.shape[0]}')
         self.sigma = best_sigma
 
-    def explain_instance(self, x, _, __, num_features, ___=None):
+     def explain_instance(self, x, _, __,num_features,___=None):
         minus = self.X - x
         b = sp.sparse.csr_matrix(minus)
         ker = self.kernel(b, self.sigma)
@@ -76,8 +76,8 @@ class ParzenWindowClassifier:
         exp = (sumk_0 * sumt_1 - sumk_1 * sumt_0) / (self.sigma **2 * sumk_total ** 2)
         features = x.nonzero()[1]
         values = np.array(exp[0, x.nonzero()[1]])[0]
-        return sorted(zip(features, values), key=lambda x:np.abs(x[1]), revers
-            
+        return sorted(zip(features, values), key=lambda x:np.abs(x[1]), reverse=True)[:num_features]
+         
 def main():
     parser = argparse.ArgumentParser(description='Visualize some stuff')
     parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
