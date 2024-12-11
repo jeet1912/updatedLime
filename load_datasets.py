@@ -36,12 +36,13 @@ def LoadDataset(dataset_name):
     
     elif dataset_name.startswith('multi_polarity_'):
         name = dataset_name.split('_')[2]
+        print('Name : ', name)
         return LoadMultiDomainDataset(POLARITY_PATH + name)
     else:
         raise ValueError(f"Unknown dataset type: {dataset_name}")
 
 def LoadMultiDomainDataset(path_data, remove_bigrams=True):
-    random.seed(1)
+    random.seed(33)
     pos = []
     neg = []
     
@@ -61,6 +62,8 @@ def LoadMultiDomainDataset(path_data, remove_bigrams=True):
         for line in f:
             pos.append(get_words(line, remove_bigrams))
 
+    print('Len of pos ', len(np.array(pos)))
+    print('Len of pos ', len(np.array(neg)))
     random.shuffle(pos)
     random.shuffle(neg)
     
