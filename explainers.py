@@ -88,6 +88,7 @@ def explain_greedy_martens(instance_vector, label, predict_fn, num_features, dat
     return [(x, 1) for x in explanation]
 
 def data_labels_distances_mapping_text(x, classifier_fn, num_samples):
+    print('Is datamappingtext called?')
     distance_fn = lambda x: sklearn.metrics.pairwise.cosine_distances(x[0], x)[0] * 100
     features = x.nonzero()[1]
     vals = np.array(x[x.nonzero()])[0]
@@ -139,7 +140,8 @@ class GeneralizedLocalExplainer:
         self.return_mean = return_mean
         self.verbose = verbose
         self.positive = positive
-
+        print('LIME INNIT')
+                     
     def reset(self):
         pass
 
@@ -195,7 +197,7 @@ class GeneralizedLocalExplainer:
 
     def explain_instance(self, raw_data, label, classifier_fn, num_features, dataset=None):
         if not callable(classifier_fn):  # Changed condition for Python 3
-            print('Does it get here?')
+            print('Does it get under non callable function in explainers.py?')
             classifier_fn = classifier_fn.predict_proba
             print(classifier_fn)
         data, labels, distances, mapping = self.data_labels_distances_mapping(raw_data, classifier_fn)
