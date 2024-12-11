@@ -64,10 +64,10 @@ class ExplanationEvaluator:
             self.test_labels[dataset] = test_labels
             
     def vectorize_and_train(self):
-        self.vectorizer = None
-        self.train_vectors = None
-        self.test_vectors = None
-        self.inverse_vocabulary = None
+        self.vectorizer = {}
+        self.train_vectors = {}
+        self.test_vectors = {}
+        self.inverse_vocabulary = {}
         print('Vectorizing...', end='')  # Changed print for Python 3
         print(len(self.train_data))
         for d in self.train_data:
@@ -90,15 +90,15 @@ class ExplanationEvaluator:
         budget = size of explanation. Returns two maps (train_results,
         test_results), from dataset to classifier to list of recalls"""
         budget = 10
-        train_results = None
-        test_results = None
+        train_results = {}
+        test_results = {}
         for d in self.train_data:
-            train_results[d] = None
-            test_results[d] = None
+            train_results[d] = {}
+            test_results[d] = {}
             print(f'Dataset: {d}')  # Changed to f-string
             for c in self.classifiers[d]:
-                train_results[d][c] = None
-                test_results[d][c] =None
+                train_results[d][c] = {}
+                test_results[d][c] = {}
                 if c == 'l2logreg':
                     c_features = self.classifiers[d][c].coef_.nonzero()[1]
                 print(f'classifier: {c}')  # Changed to f-string
