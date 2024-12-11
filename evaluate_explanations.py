@@ -130,10 +130,10 @@ def main():
         explain_fn = explainer.explain_instance
     elif args.explainer == 'parzen':
         sigmas = {
-            'multi_polarity_electronics': {'tree': 0.5, 'l1logreg': 1},
-            'multi_polarity_kitchen': {'tree': 0.75, 'l1logreg': 2.0},
-            'multi_polarity_dvd': {'tree': 8.0, 'l1logreg': 1},
-            'multi_polarity_books': {'tree': 2.0, 'l1logreg': 2.0}
+            'multi_polarity_electronics': {'tree': 0.5, 'l2logreg': 1},
+            'multi_polarity_kitchen': {'tree': 0.75, 'l2logreg': 2.0},
+            'multi_polarity_dvd': {'tree': 8.0, 'l2logreg': 1},
+            'multi_polarity_books': {'tree': 2.0, 'l2logreg': 2.0}
         }
         explainer = parzen_windows.ParzenWindowClassifier()
         cv_preds = sklearn.model_selection.cross_val_predict(evaluator.classifiers[dataset][algorithm], evaluator.train_vectors[dataset], evaluator.train_labels[dataset])  # Updated from cross_validation to model_selection
