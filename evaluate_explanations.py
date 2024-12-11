@@ -94,8 +94,8 @@ class ExplanationEvaluator:
         train_results = {}
         test_results = {}
         for d in self.train_data:
-            train_results[d] = {}
-            test_results[d] = {}
+            train_results[d] = []
+            test_results[d] = []
             print(f'Dataset: {d}')  # Changed to f-string
             for c in self.classifiers[d]:  
                 train_results[d][c] = []
