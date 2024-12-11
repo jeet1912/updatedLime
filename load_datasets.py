@@ -75,4 +75,4 @@ def LoadMultiDomainDataset(path_data, remove_bigrams=True):
     train_labels = [1] * len(pos[:split_pos]) + [0] * len(neg[:split_neg])
     test_labels = [1] * len(pos[split_pos:]) + [0] * len(neg[split_neg:])
     
-    return train_data, np.array(train_labels), test_data, np.array(test_labels), ['neg', 'pos']
+    return np.array(train_data), np.array(train_labels), np.array(test_data), np.array(test_labels), ['neg', 'pos']
