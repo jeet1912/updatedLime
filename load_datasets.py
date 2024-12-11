@@ -11,7 +11,7 @@ from sklearn import linear_model
 import sklearn.metrics.pairwise
 from sklearn.datasets import fetch_20newsgroups
 
-POLARITY_PATH = '/content/drive/MyDrive/phd/datasets/multi_domain_polarity/'
+POLARITY_PATH = '/content/drive/MyDrive/dm634/multi_domain_polarity/'
 def LoadDataset(dataset_name):
     if dataset_name.endswith('ng'):
         if dataset_name == '2ng':
