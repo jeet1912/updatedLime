@@ -66,6 +66,7 @@ class ExplanationEvaluator:
         self.inverse_vocabulary = {}
         print('Vectorizing...', end='')  # Changed print for Python 3
         for d in self.train_data:
+            print(d)
             self.vectorizer[d] = CountVectorizer(lowercase=False, binary=True)
             self.train_vectors[d] = self.vectorizer[d].fit_transform(self.train_data[d])
             self.test_vectors[d] = self.vectorizer[d].transform(self.test_data[d])
@@ -78,7 +79,6 @@ class ExplanationEvaluator:
             print(d)
             self.init_classifiers(d)
         print('Done')
-        print()
 
     def measure_explanation_hability(self, explain_fn, max_examples=None):
         """Asks for explanations for all predictions in the train and test set, with
