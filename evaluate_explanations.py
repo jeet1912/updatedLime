@@ -84,7 +84,7 @@ class ExplanationEvaluator:
             self.init_classifiers(d)
         print('Done')
 
-    def measure_explanation_hability(self, explain_fn, max_examples=None):
+    def measure_explanation_ability(self, explain_fn, max_examples=None):
         """Asks for explanations for all predictions in the train and test set, with
         budget = size of explanation. Returns two maps (train_results,
         test_results), from dataset to classifier to list of recalls"""
@@ -92,10 +92,10 @@ class ExplanationEvaluator:
         train_results = {}
         test_results = {}
         for d in self.train_data:
-            train_results[d] = []
-            test_results[d] = []
+            train_results[d] = {}
+            test_results[d] = {}
             print(f'Dataset: {d}')  # Changed to f-string
-            for c in self.classifiers[d]:
+            for c in self.classifiers[d]:  
                 train_results[d][c] = []
                 test_results[d][c] = []
                 if c == 'l2logreg':
