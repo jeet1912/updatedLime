@@ -63,6 +63,7 @@ class ParzenWindowClassifier:
         self.sigma = best_sigma
 
     def explain_instance(self, x, _, __, num_features, ___=None):
+     
         print(f"Shape of self.X: {self.X.shape}")
         print(f"Shape of x before reshape: {x.shape}")
         
@@ -70,9 +71,17 @@ class ParzenWindowClassifier:
         x = x.reshape(1, -1) if x.ndim == 1 else x  # If x is 1D, make it 2D with one row
         
         print(f"Shape of x after reshape: {x.shape}")
+        print(f"Type of self.X: {type(self.X)}")
+        print(f"Dtype of self.X: {self.X.dtype}")
+        print(f"Type of x: {type(x)}")
+        print(f"Dtype of x: {x.dtype}")
         
-        # Now, ensure we can subtract x from each row of self.X
-        minus = self.X - x
+        # Handle sparse matrix if self.X is sparse
+        if sp.sparse.issparse(self.X):
+            minus = self.X - sp.sparse.csr_matrix(x)
+        else:
+            minus = self.X - x[0, :]  # Explicit broadcasting
+        
         b = sp.sparse.csr_matrix(minus)
         ker = self.kernel(b, self.sigma)
         times = np.multiply(minus, ker[:, np.newaxis])
@@ -85,7 +94,7 @@ class ParzenWindowClassifier:
         features = x.nonzero()[1]
         values = np.array(exp[0, x.nonzero()[1]])[0]
         return sorted(zip(features, values), key=lambda x: np.abs(x[1]), reverse=True)[:num_features]
-        
+            
 def main():
     parser = argparse.ArgumentParser(description='Visualize some stuff')
     parser.add_argument('--dataset', '-d', type=str, required=True, help='dataset name')
